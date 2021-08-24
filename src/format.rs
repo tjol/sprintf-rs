@@ -318,7 +318,7 @@ impl Printf for f64 {
                         ((normal - normal.trunc()) * 10.0_f64.powi(precision)).round() as u64;
                     let mut rev_tail_str = String::new();
                     for _ in 0..precision {
-                        rev_tail_str.push(('0' as u8 + (tail % 10) as u8) as char);
+                        rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
                         tail /= 10;
                     }
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
@@ -335,7 +335,7 @@ impl Printf for f64 {
                     let mut tail = ((abs - abs.trunc()) * 10.0_f64.powi(precision)).round() as u64;
                     let mut rev_tail_str = String::new();
                     for _ in 0..precision {
-                        rev_tail_str.push(('0' as u8 + (tail % 10) as u8) as char);
+                        rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
                         tail /= 10;
                     }
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
@@ -443,7 +443,7 @@ impl Printf for char {
 
 impl Printf for String {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
-        (&self as &str).format(spec)
+        (self as &str).format(spec)
     }
     fn as_int(&self) -> Option<i32> {
         None

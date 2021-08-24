@@ -77,7 +77,7 @@ fn vsprintfp(format: &[FormatElement], args: &[&dyn Printf]) -> Result<String> {
     for elem in format {
         match elem {
             FormatElement::Verbatim(s) => {
-                res.push_str(&s);
+                res.push_str(s);
             }
             FormatElement::Format(spec) => {
                 if spec.conversion_type == ConversionType::PercentSign {
