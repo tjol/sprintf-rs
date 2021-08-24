@@ -1,6 +1,6 @@
+use std::convert::TryInto;
 use std::ffi::CString;
 use std::os::raw::c_char;
-use std::convert::TryInto;
 
 use libc::snprintf;
 
@@ -11,8 +11,15 @@ fn check_fmt<T: Printf>(fmt: &str, arg: T) {
     let mut buf = vec![0_u8; our_result.len() + 1];
     let cfmt = CString::new(fmt).unwrap();
     let clen: usize = unsafe {
-        snprintf(buf.as_mut_ptr() as *mut c_char, buf.len(), cfmt.as_ptr(), arg)
-    }.try_into().unwrap();
+        snprintf(
+            buf.as_mut_ptr() as *mut c_char,
+            buf.len(),
+            cfmt.as_ptr(),
+            arg,
+        )
+    }
+    .try_into()
+    .unwrap();
     buf.truncate(clen); // drop the final '\0', etc.
     let c_result = String::from_utf8(buf).unwrap();
     assert_eq!(our_result, c_result);
@@ -24,8 +31,15 @@ fn check_fmt_s(fmt: &str, arg: &str) {
     let cfmt = CString::new(fmt).unwrap();
     let carg = CString::new(arg).unwrap();
     let clen: usize = unsafe {
-        snprintf(buf.as_mut_ptr() as *mut c_char, buf.len(), cfmt.as_ptr(), carg.as_ptr())
-    }.try_into().unwrap();
+        snprintf(
+            buf.as_mut_ptr() as *mut c_char,
+            buf.len(),
+            cfmt.as_ptr(),
+            carg.as_ptr(),
+        )
+    }
+    .try_into()
+    .unwrap();
     buf.truncate(clen); // drop the final '\0', etc.
     let c_result = String::from_utf8(buf).unwrap();
     assert_eq!(our_result, c_result);

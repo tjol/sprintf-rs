@@ -18,14 +18,14 @@
 //!     assert_eq!(s, "3 + 9 = 12\n");
 //!
 //! The types of the arguments are checked at runtime.
-//! 
+//!
 
 mod format;
 mod parser;
 
 pub use format::Printf;
-pub use parser::{ConversionType, ConversionSpecifier, NumericParam};
 use parser::{parse_format_string, FormatElement};
+pub use parser::{ConversionSpecifier, ConversionType, NumericParam};
 
 /// Error type
 #[derive(Debug, Clone, Copy)]
@@ -45,16 +45,16 @@ pub enum PrintfError {
 pub type Result<T> = std::result::Result<T, PrintfError>;
 
 /// Format a string. (Roughly equivalent to `vsnprintf` in C)
-/// 
+///
 /// Takes a printf-style format string `format` and a slice of dynamically
 /// typed arguments, `args`.
-/// 
+///
 ///     use sprintf::{vsprintf, Printf};
 ///     let n = 16;
 ///     let args: Vec<&dyn Printf> = vec![&n];
 ///     let s = vsprintf("%#06x", &args).unwrap();
 ///     assert_eq!(s, "0x0010");
-/// 
+///
 /// See also: [sprintf]
 pub fn vsprintf(format: &str, args: &[&dyn Printf]) -> Result<String> {
     vsprintfp(&parse_format_string(format)?, args)
@@ -108,14 +108,14 @@ fn vsprintfp(format: &[FormatElement], args: &[&dyn Printf]) -> Result<String> {
 }
 
 /// Format a string. (Roughly equivalent to `snprintf` in C)
-/// 
+///
 /// Takes a printf-style format string `format` and a variable number of
 /// additional arguments.
-/// 
+///
 ///     use sprintf::sprintf;
 ///     let s = sprintf!("%s = %*d", "forty-two", 4, 42).unwrap();
 ///     assert_eq!(s, "forty-two =   42");
-/// 
+///
 /// Wrapper around [vsprintf].
 #[macro_export]
 macro_rules! sprintf {
