@@ -2,7 +2,7 @@
 //! formatting without a libc (e.g. in WebAssembly).
 //!
 //! **Note:** *You're probably better off using standard Rust string formatting
-//! instead of thie create unless you specificaly need printf compatibility.*
+//! instead of thie crate unless you specificaly need printf compatibility.*
 //!
 //! It follows the standard C semantics, except:
 //!
