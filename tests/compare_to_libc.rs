@@ -62,6 +62,7 @@ fn test_int() {
     check_fmt("%ld", -4_i64);
     check_fmt("%lX", -4_i64);
     check_fmt("%ld", 48_i64);
+    check_fmt("%-8hd", -12_i16);
 }
 
 #[test]

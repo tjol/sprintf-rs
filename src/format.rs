@@ -118,13 +118,13 @@ impl Printf for i64 {
                     }
                 };
 
-                // put the sign a after any leading spaces
                 let formatted = (abs_val as u64).format(&mod_spec)?;
+                // put the sign a after any leading spaces
                 let mut actual_number = &formatted[0..];
                 let mut leading_spaces = &formatted[0..0];
-                if let Some(last_space_idx) = formatted.rfind(' ') {
-                    actual_number = &formatted[last_space_idx + 1..];
-                    leading_spaces = &formatted[0..last_space_idx + 1];
+                if let Some(first_non_space) = formatted.find(|c| c != ' ') {
+                    actual_number = &formatted[first_non_space..];
+                    leading_spaces = &formatted[0..first_non_space];
                 }
                 Ok(leading_spaces.to_owned() + &sign_prefix + actual_number)
             }
