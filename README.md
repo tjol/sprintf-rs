@@ -1,6 +1,6 @@
 # sprintf-rs
 
-**a clone of C s(n)printf in Rust**
+**a clone of C sprintf in Rust**
 
 This crate was created out of a desire to provide C printf-style formatting
 in a WASM program, where there is no libc.

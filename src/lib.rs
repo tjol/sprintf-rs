@@ -44,7 +44,7 @@ pub enum PrintfError {
 
 pub type Result<T> = std::result::Result<T, PrintfError>;
 
-/// Format a string. (Roughly equivalent to `vsnprintf` in C)
+/// Format a string. (Roughly equivalent to `vsnprintf` or `vasprintf` in C)
 ///
 /// Takes a printf-style format string `format` and a slice of dynamically
 /// typed arguments, `args`.
@@ -107,7 +107,7 @@ fn vsprintfp(format: &[FormatElement], args: &[&dyn Printf]) -> Result<String> {
     }
 }
 
-/// Format a string. (Roughly equivalent to `snprintf` in C)
+/// Format a string. (Roughly equivalent to `snprintf` or `asprintf` in C)
 ///
 /// Takes a printf-style format string `format` and a variable number of
 /// additional arguments.
