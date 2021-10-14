@@ -70,6 +70,7 @@ fn test_float() {
     check_fmt("%f", -46.38);
     check_fmt("%012.3f", 1.2);
     check_fmt("%012.3e", 1.7);
+    check_fmt("%e", 1e300);
     check_fmt("%012.3g%%!", 2.6);
     check_fmt("%012.5G", -2.69);
     check_fmt("%+7.4f", 42.785);
