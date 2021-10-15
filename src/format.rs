@@ -309,13 +309,13 @@ impl Printf for f64 {
             }
 
             if use_scientific {
-                let normal = abs / 10.0_f64.powi(exponent);
+                let normal = abs / 10.0_f64.powf(exponent as f64);
 
                 number.push_str(&format!("{}", normal.trunc()));
                 if precision > 0 {
                     number.push('.');
                     let mut tail =
-                        ((normal - normal.trunc()) * 10.0_f64.powi(precision)).round() as u64;
+                        ((normal - normal.trunc()) * 10.0_f64.powf(precision as f64)).round() as u64;
                     let mut rev_tail_str = String::new();
                     for _ in 0..precision {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
@@ -332,7 +332,7 @@ impl Printf for f64 {
                 number.push_str(&format!("{}", abs.trunc()));
                 if precision > 0 {
                     number.push('.');
-                    let mut tail = ((abs - abs.trunc()) * 10.0_f64.powi(precision)).round() as u64;
+                    let mut tail = ((abs - abs.trunc()) * 10.0_f64.powf(precision as f64)).round() as u64;
                     let mut rev_tail_str = String::new();
                     for _ in 0..precision {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
