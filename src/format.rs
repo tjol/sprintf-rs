@@ -254,8 +254,8 @@ impl Printf for f64 {
             let mut use_scientific = false;
             let mut exp_symb = 'e';
             let mut strip_trailing_0s = false;
-            let abs = self.abs();
-            let exponent = abs.log10().floor() as i32;
+            let mut abs = self.abs();
+            let mut exponent = abs.log10().floor() as i32;
             let mut precision = match spec.precision {
                 NumericParam::Literal(p) => p,
                 _ => {
@@ -276,25 +276,20 @@ impl Printf for f64 {
                     use_scientific = true;
                     exp_symb = 'E';
                 }
-                ConversionType::CompactFloatLower => {
+                ConversionType::CompactFloatLower | ConversionType::CompactFloatUpper => {
+                    if spec.conversion_type == ConversionType::CompactFloatUpper {
+                        exp_symb = 'E'
+                    }
                     strip_trailing_0s = true;
                     if precision == 0 {
                         precision = 1;
                     }
-                    if exponent < -4 || exponent >= precision {
-                        use_scientific = true;
-                        precision -= 1;
-                    } else {
-                        // precision specifies the number of significant digits
-                        precision -= 1 + exponent;
-                    }
-                }
-                ConversionType::CompactFloatUpper => {
-                    exp_symb = 'E';
-                    strip_trailing_0s = true;
-                    if precision == 0 {
-                        precision = 1;
-                    }
+                    // exponent signifies significant digits - we must round now
+                    // to (re)calculate the exponent
+                    let rounding_factor = 10.0_f64.powf((precision - 1 - exponent) as f64);
+                    let rounded_fixed = (abs * rounding_factor).round();
+                    abs = rounded_fixed / rounding_factor;
+                    exponent = abs.log10().floor() as i32;
                     if exponent < -4 || exponent >= precision {
                         use_scientific = true;
                         precision -= 1;
@@ -309,39 +304,64 @@ impl Printf for f64 {
             }
 
             if use_scientific {
-                let normal = abs / 10.0_f64.powf(exponent as f64);
+                let mut normal = abs / 10.0_f64.powf(exponent as f64);
 
-                number.push_str(&format!("{}", normal.trunc()));
                 if precision > 0 {
-                    number.push('.');
-                    let mut tail =
-                        ((normal - normal.trunc()) * 10.0_f64.powf(precision as f64)).round() as u64;
+                    let mut int_part = normal.trunc();
+                    let mut exp_factor = 10.0_f64.powf(precision as f64);
+                    let mut tail = ((normal - int_part) * exp_factor).round() as u64;
+                    while tail >= exp_factor as u64 {
+                        // Overflow, must round
+                        int_part += 1.0;
+                        tail -= exp_factor as u64;
+                        if int_part >= 10.0 {
+                            exponent += 1;
+                            // keep same precision - recalculate tail
+                            exp_factor /= 10.0;
+                            normal /= 10.0;
+                            int_part = normal.trunc();
+                            tail = ((normal - int_part) * exp_factor).round() as u64;
+                        }
+                    }
+
                     let mut rev_tail_str = String::new();
                     for _ in 0..precision {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
                         tail /= 10;
                     }
+                    number.push_str(&format!("{}", int_part));
+                    number.push('.');
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
                     }
+                } else {
+                    number.push_str(&format!("{}", normal.round()));
                 }
                 number.push(exp_symb);
                 number.push_str(&format!("{:+03}", exponent));
             } else {
-                number.push_str(&format!("{}", abs.trunc()));
                 if precision > 0 {
-                    number.push('.');
-                    let mut tail = ((abs - abs.trunc()) * 10.0_f64.powf(precision as f64)).round() as u64;
+                    let mut int_part = abs.trunc() as i64;
+                    let mut tail =
+                        ((abs - abs.trunc()) * 10.0_f64.powf(precision as f64)).round() as u64;
                     let mut rev_tail_str = String::new();
                     for _ in 0..precision {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
                         tail /= 10;
                     }
+                    if tail > 0 {
+                        // overflow - we must round up
+                        int_part += 1;
+                    }
+                    number.push_str(&format!("{}", int_part));
+                    number.push('.');
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
                     }
+                } else {
+                    number.push_str(&format!("{}", abs.round()));
                 }
             }
         } else {
