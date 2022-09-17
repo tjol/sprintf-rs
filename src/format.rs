@@ -315,8 +315,8 @@ impl Printf for f64 {
                         int_part += 1.0;
                         tail -= exp_factor as u64;
                         if int_part >= 10.0 {
+                            // keep same precision - which means changing exponent
                             exponent += 1;
-                            // keep same precision - recalculate tail
                             exp_factor /= 10.0;
                             normal /= 10.0;
                             int_part = normal.trunc();
@@ -342,17 +342,20 @@ impl Printf for f64 {
                 number.push_str(&format!("{:+03}", exponent));
             } else {
                 if precision > 0 {
-                    let mut int_part = abs.trunc() as i64;
-                    let mut tail =
-                        ((abs - abs.trunc()) * 10.0_f64.powf(precision as f64)).round() as u64;
+                    let mut int_part = abs.trunc();
+                    let exp_factor = 10.0_f64.powf(precision as f64);
+                    let mut tail = ((abs - int_part) * exp_factor).round() as u64;
                     let mut rev_tail_str = String::new();
+                    if tail >= exp_factor as u64 {
+                        // overflow - we must round up
+                        int_part += 1.0;
+                        tail -= exp_factor as u64;
+                        // no need to change the exponent as we don't have one
+                        // (not scientific notation)
+                    }
                     for _ in 0..precision {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
                         tail /= 10;
-                    }
-                    if tail > 0 {
-                        // overflow - we must round up
-                        int_part += 1;
                     }
                     number.push_str(&format!("{}", int_part));
                     number.push('.');
