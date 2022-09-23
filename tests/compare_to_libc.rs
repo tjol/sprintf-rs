@@ -80,7 +80,21 @@ fn test_float() {
     check_fmt("%+010F", f64::INFINITY);
     check_fmt("% f", f64::NAN);
     check_fmt("%+f", f64::NAN);
-    check_fmt("%7f", -f64::NAN);
+    check_fmt("%.1f", 999.99);
+    check_fmt("%.1f", 9.99);
+    check_fmt("%.1e", 9.99);
+    check_fmt("%.2f", 9.99);
+    check_fmt("%.2e", 9.99);
+    check_fmt("%.3f", 9.99);
+    check_fmt("%.3e", 9.99);
+    check_fmt("%.1g", 9.99);
+    check_fmt("%.1G", 9.99);
+    check_fmt("%.1f", 2.99);
+    check_fmt("%.1e", 2.99);
+    check_fmt("%.1g", 2.99);
+    check_fmt("%.1f", 2.599);
+    check_fmt("%.1e", 2.599);
+    check_fmt("%.1g", 2.599);
 }
 
 #[test]
