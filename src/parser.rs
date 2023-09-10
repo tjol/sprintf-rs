@@ -135,7 +135,7 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
         s = s2;
     }
     // check length specifier
-    for len_spec in ["hh", "h", "l", "ll", "q", "L", "j", "z", "Z", "t"] {
+    for len_spec in ["hh", "h", "ll", "l", "q", "L", "j", "z", "Z", "t"] {
         if s.starts_with(len_spec) {
             s = s.strip_prefix(len_spec).ok_or(PrintfError::ParseError)?;
             break; // only allow one length specifier
