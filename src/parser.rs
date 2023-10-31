@@ -1,7 +1,7 @@
 use crate::{PrintfError, Result};
 
 #[derive(Debug, Clone)]
-pub(crate) enum FormatElement {
+pub enum FormatElement {
     Verbatim(String),
     Format(ConversionSpecifier),
 }
@@ -69,7 +69,7 @@ pub enum ConversionType {
     PercentSign,
 }
 
-pub(crate) fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
+pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
     // find the first %
     let mut res = Vec::new();
     let parts: Vec<&str> = fmt.splitn(2, '%').collect();
