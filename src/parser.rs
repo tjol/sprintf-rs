@@ -69,6 +69,30 @@ pub enum ConversionType {
     PercentSign,
 }
 
+/// Parses a string to a vector of [FormatElement]
+///
+/// Takes a printf-style format string `fmt`
+///
+///     use sprintf::{parse_format_string, FormatElement, ConversionType, ConversionSpecifier};
+///     let fmt = "Hello %#06x";
+///     let parsed = parse_format_string(fmt).unwrap();
+///     assert_eq!(
+///        parsed,
+///        vec![
+///           FormatElement::Verbatim("Hello ".to_owned()),
+///           FormatElement::Format(ConversionSpecifier {
+///             alt_form: true,
+///             zero_pad: false,
+///             left_adj: false,
+///             space_sign: false,
+///             force_sign: false,
+///             width: NumericParam::Literal(6),
+///             precision: NumericParam::Literal(6),
+///             conversion_type: ConversionType::HexIntLower,
+///          }),
+///      ]
+///    );
+///
 pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
     // find the first %
     let mut res = Vec::new();
