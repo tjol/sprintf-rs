@@ -90,7 +90,7 @@ pub enum ConversionType {
 ///             precision: NumericParam::Literal(6),
 ///             conversion_type: ConversionType::HexIntLower,
 ///          }),
-///      ]
+///       ]
 ///    );
 ///
 pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
