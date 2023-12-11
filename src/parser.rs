@@ -1,13 +1,13 @@
 use crate::{PrintfError, Result};
 
-#[derive(Debug, Clone)]
-pub(crate) enum FormatElement {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FormatElement {
     Verbatim(String),
     Format(ConversionSpecifier),
 }
 
 /// Parsed printf conversion specifier
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ConversionSpecifier {
     /// flag `#`: use `0x`, etc?
     pub alt_form: bool,
@@ -69,7 +69,26 @@ pub enum ConversionType {
     PercentSign,
 }
 
-pub(crate) fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
+/// Parses a string to a vector of [FormatElement]
+///
+/// Takes a printf-style format string `fmt`
+///
+///     use sprintf::{parse_format_string, FormatElement, ConversionType, ConversionSpecifier, NumericParam};
+///     let fmt = "Hello %#06x";
+///     let parsed = parse_format_string(fmt).unwrap();
+///     assert_eq!(parsed[0], FormatElement::Verbatim("Hello ".to_owned()));
+///     assert_eq!(parsed[1], FormatElement::Format(ConversionSpecifier {
+///         alt_form: true,
+///         zero_pad: true,
+///         left_adj: false,
+///         space_sign: false,
+///         force_sign: false,
+///         width: NumericParam::Literal(6),
+///         precision: NumericParam::Literal(6),
+///         conversion_type: ConversionType::HexIntLower,
+///     }));
+///
+pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
     // find the first %
     let mut res = Vec::new();
     let parts: Vec<&str> = fmt.splitn(2, '%').collect();

@@ -24,7 +24,7 @@ mod format;
 mod parser;
 
 pub use format::Printf;
-use parser::{parse_format_string, FormatElement};
+pub use parser::{parse_format_string, FormatElement};
 pub use parser::{ConversionSpecifier, ConversionType, NumericParam};
 
 /// Error type
