@@ -20,25 +20,31 @@
 //! The types of the arguments are checked at runtime.
 //!
 
+use thiserror::Error;
+
 mod format;
 pub mod parser;
 
 pub use format::Printf;
-
 use parser::{parse_format_string, ConversionType, FormatElement, NumericParam};
 
 /// Error type
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Error)]
 pub enum PrintfError {
     /// Error parsing the format string
+    #[error("Error parsing the format string")]
     ParseError,
     /// Incorrect type passed as an argument
+    #[error("Incorrect type passed as an argument")]
     WrongType,
     /// Too many arguments passed
+    #[error("Too many arguments passed")]
     TooManyArgs,
     /// Too few arguments passed
+    #[error("Too few arguments passed")]
     NotEnoughArgs,
     /// Other error (should never happen)
+    #[error("Other error (should never happen)")]
     Unknown,
 }
 

@@ -76,7 +76,6 @@ pub enum ConversionType {
     PercentSign,
 }
 
-
 /// Parses a string to a vector of [FormatElement]
 ///
 /// Takes a printf-style format string `fmt`
