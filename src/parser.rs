@@ -1,8 +1,15 @@
+//! Parse printf format strings
+
 use crate::{PrintfError, Result};
 
+/// A part of a format string: either a string of characters to be included
+/// verbatim, or a format specifier that should be replaced based on an argument
+/// to the [vsprintf](crate::vsprintf) call.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FormatElement {
+    /// Some characters that are copied to the output as-is
     Verbatim(String),
+    /// A format specifier
     Format(ConversionSpecifier),
 }
 
@@ -69,24 +76,30 @@ pub enum ConversionType {
     PercentSign,
 }
 
+
 /// Parses a string to a vector of [FormatElement]
 ///
 /// Takes a printf-style format string `fmt`
 ///
-///     use sprintf::{parse_format_string, FormatElement, ConversionType, ConversionSpecifier, NumericParam};
+///     use sprintf::parser::{
+///         parse_format_string, ConversionSpecifier, ConversionType, FormatElement, NumericParam,
+///     };
 ///     let fmt = "Hello %#06x";
 ///     let parsed = parse_format_string(fmt).unwrap();
 ///     assert_eq!(parsed[0], FormatElement::Verbatim("Hello ".to_owned()));
-///     assert_eq!(parsed[1], FormatElement::Format(ConversionSpecifier {
-///         alt_form: true,
-///         zero_pad: true,
-///         left_adj: false,
-///         space_sign: false,
-///         force_sign: false,
-///         width: NumericParam::Literal(6),
-///         precision: NumericParam::Literal(6),
-///         conversion_type: ConversionType::HexIntLower,
-///     }));
+///     assert_eq!(
+///         parsed[1],
+///         FormatElement::Format(ConversionSpecifier {
+///             alt_form: true,
+///             zero_pad: true,
+///             left_adj: false,
+///             space_sign: false,
+///             force_sign: false,
+///             width: NumericParam::Literal(6),
+///             precision: NumericParam::Literal(6),
+///             conversion_type: ConversionType::HexIntLower,
+///         })
+///     );
 ///
 pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
     // find the first %

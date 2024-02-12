@@ -21,11 +21,11 @@
 //!
 
 mod format;
-mod parser;
+pub mod parser;
 
 pub use format::Printf;
-pub use parser::{parse_format_string, FormatElement};
-pub use parser::{ConversionSpecifier, ConversionType, NumericParam};
+
+use parser::{parse_format_string, ConversionType, FormatElement, NumericParam};
 
 /// Error type
 #[derive(Debug, Clone, Copy)]
@@ -60,7 +60,10 @@ pub fn vsprintf(format: &str, args: &[&dyn Printf]) -> Result<String> {
     vsprintfp(&parse_format_string(format)?, args)
 }
 
-fn vsprintfp(format: &[FormatElement], args: &[&dyn Printf]) -> Result<String> {
+/// Format a string using [`parser::FormatElement`]s
+///
+/// Like [vsprintf], except that it doesn't parse the format string.
+pub fn vsprintfp(format: &[FormatElement], args: &[&dyn Printf]) -> Result<String> {
     let mut res = String::new();
 
     let mut args = args;

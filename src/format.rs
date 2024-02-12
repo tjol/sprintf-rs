@@ -1,6 +1,9 @@
 use std::convert::{TryFrom, TryInto};
 
-use crate::{ConversionSpecifier, ConversionType, NumericParam, PrintfError, Result};
+use crate::{
+    parser::{ConversionSpecifier, ConversionType, NumericParam},
+    PrintfError, Result,
+};
 
 /// Trait for types that can be formatted using printf strings
 ///
