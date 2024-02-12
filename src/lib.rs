@@ -26,7 +26,9 @@ mod format;
 pub mod parser;
 
 pub use format::Printf;
-use parser::{parse_format_string, ConversionType, FormatElement, NumericParam};
+use parser::{parse_format_string, FormatElement};
+#[doc(hidden)]
+pub use parser::{ConversionSpecifier, ConversionType, NumericParam};
 
 /// Error type
 #[derive(Debug, Clone, Copy, Error)]
