@@ -102,6 +102,9 @@ fn test_float() {
 fn test_str() {
     check_fmt_s("test %% with string: %s yay\n", "FOO");
     check_fmt("test char %c", '~');
+    let c_string = CString::new("test").unwrap();
+    check_fmt("%s", c_string.as_c_str());
+    check_fmt("%s", c_string);
 }
 
 #[test]

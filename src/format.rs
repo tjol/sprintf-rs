@@ -1,4 +1,5 @@
 use std::convert::{TryFrom, TryInto};
+use std::ffi::{CStr, CString};
 
 use crate::{
     parser::{ConversionSpecifier, ConversionType, NumericParam},
@@ -493,6 +494,28 @@ impl Printf for char {
 impl Printf for String {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (self as &str).format(spec)
+    }
+    fn as_int(&self) -> Option<i32> {
+        None
+    }
+}
+
+impl Printf for &CStr {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
+        if let Ok(s) = self.to_str() {
+            s.format(spec)
+        } else {
+            Err(PrintfError::WrongType)
+        }
+    }
+    fn as_int(&self) -> Option<i32> {
+        None
+    }
+}
+
+impl Printf for CString {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
+        self.as_c_str().format(spec)
     }
     fn as_int(&self) -> Option<i32> {
         None
