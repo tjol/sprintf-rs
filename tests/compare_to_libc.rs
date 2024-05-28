@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
 use std::os::raw::c_char;
 
@@ -102,4 +102,13 @@ fn test_float() {
 fn test_str() {
     check_fmt_s("test %% with string: %s yay\n", "FOO");
     check_fmt("test char %c", '~');
+}
+
+#[test]
+fn test_char() {
+    check_fmt("%c", 'x');
+    check_fmt("%c", b'x');
+    check_fmt("%c", b'x' as c_char);
+    check_fmt("%c", u16::try_from('x').unwrap());
+    check_fmt("%c", u32::try_from('x').unwrap());
 }
