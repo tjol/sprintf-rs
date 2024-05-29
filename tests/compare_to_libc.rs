@@ -1,3 +1,6 @@
+// The libc crate on Windows doesn't have snprintf
+#![cfg(not(windows))]
+
 use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
 use std::os::raw::c_char;
@@ -79,8 +82,6 @@ fn test_float() {
     check_fmt("% 7.4E", -120.3);
     check_fmt("%-10F", f64::INFINITY);
     check_fmt("%+010F", f64::INFINITY);
-    check_fmt("% f", f64::NAN);
-    check_fmt("%+f", f64::NAN);
     check_fmt("%.1f", 999.99);
     check_fmt("%.1f", 9.99);
     check_fmt("%.1e", 9.99);
@@ -96,6 +97,15 @@ fn test_float() {
     check_fmt("%.1f", 2.599);
     check_fmt("%.1e", 2.599);
     check_fmt("%.1g", 2.599);
+
+    // MacOS libc behaves differently from glibc for nan. glibc is the reference implementation.
+    if cfg!(target_env = "gnu") {
+        check_fmt("% f", f64::NAN);
+        check_fmt("%+f", f64::NAN);
+    } else {
+        assert_eq!(sprintf!("% f", f64::NAN).unwrap(), " nan");
+        assert_eq!(sprintf!("%+f", f64::NAN).unwrap(), "+nan");
+    }
 }
 
 #[test]
