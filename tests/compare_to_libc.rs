@@ -1,3 +1,6 @@
+// The libc crate on Windows doesn't have snprintf
+#![cfg(not(windows))]
+
 use std::convert::TryInto;
 use std::ffi::CString;
 use std::os::raw::c_char;
