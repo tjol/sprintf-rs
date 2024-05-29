@@ -236,7 +236,13 @@ impl Printf for i8 {
 impl Printf for u8 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
-            ConversionType::Char => char::from(*self).format(spec),
+            ConversionType::Char => {
+                if self.is_ascii() {
+                    char::from(*self).format(spec)
+                } else {
+                    Err(PrintfError::WrongType)
+                }
+            }
             _ => (*self as u64).format(spec),
         }
     }

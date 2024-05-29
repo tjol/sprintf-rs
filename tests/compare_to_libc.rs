@@ -125,3 +125,11 @@ fn test_char() {
     check_fmt("%c", u16::try_from('x').unwrap());
     check_fmt("%c", u32::try_from('x').unwrap());
 }
+
+#[test]
+fn test_sanity() {
+    // u8 must not misinterpret bytes from multi-byte UTF-8 characters
+    let bytes = "∆".as_bytes();
+    assert!(bytes.len() > 1);
+    assert_eq!(sprintf!("%c", bytes[0]), Err(PrintfError::WrongType));
+}
