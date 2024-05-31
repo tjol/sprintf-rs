@@ -1,7 +1,7 @@
 // The libc crate on Windows doesn't have snprintf
 #![cfg(not(windows))]
 
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
 use std::os::raw::c_char;
 
@@ -112,4 +112,24 @@ fn test_float() {
 fn test_str() {
     check_fmt_s("test %% with string: %s yay\n", "FOO");
     check_fmt("test char %c", '~');
+    let c_string = CString::new("test").unwrap();
+    check_fmt("%s", c_string.as_c_str());
+    check_fmt("%s", c_string);
+}
+
+#[test]
+fn test_char() {
+    check_fmt("%c", 'x');
+    check_fmt("%c", b'x');
+    check_fmt("%c", b'x' as c_char);
+    check_fmt("%c", u16::try_from('x').unwrap());
+    check_fmt("%c", u32::try_from('x').unwrap());
+}
+
+#[test]
+fn test_sanity() {
+    // u8 must not misinterpret bytes from multi-byte UTF-8 characters
+    let bytes = "∆".as_bytes();
+    assert!(bytes.len() > 1);
+    assert_eq!(sprintf!("%c", bytes[0]), Err(PrintfError::WrongType));
 }

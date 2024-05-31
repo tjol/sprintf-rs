@@ -1,4 +1,5 @@
 use std::convert::{TryFrom, TryInto};
+use std::ffi::{CStr, CString};
 
 use crate::{
     parser::{ConversionSpecifier, ConversionType, NumericParam},
@@ -162,7 +163,16 @@ impl Printf for i32 {
 
 impl Printf for u32 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
-        (*self as u64).format(spec)
+        match spec.conversion_type {
+            ConversionType::Char => {
+                if let Some(c) = char::from_u32(*self) {
+                    c.format(spec)
+                } else {
+                    Err(PrintfError::WrongType)
+                }
+            }
+            _ => (*self as u64).format(spec),
+        }
     }
     fn as_int(&self) -> Option<i32> {
         i32::try_from(*self).ok()
@@ -188,7 +198,16 @@ impl Printf for i16 {
 
 impl Printf for u16 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
-        (*self as u64).format(spec)
+        match spec.conversion_type {
+            ConversionType::Char => {
+                if let Some(Ok(c)) = char::decode_utf16([*self]).next() {
+                    c.format(spec)
+                } else {
+                    Err(PrintfError::WrongType)
+                }
+            }
+            _ => (*self as u64).format(spec),
+        }
     }
     fn as_int(&self) -> Option<i32> {
         Some(*self as i32)
@@ -204,6 +223,8 @@ impl Printf for i8 {
             ConversionType::HexIntLower | ConversionType::HexIntUpper | ConversionType::OctInt => {
                 (*self as u8).format(spec)
             }
+            // c_char
+            ConversionType::Char => (*self as u8).format(spec),
             _ => Err(PrintfError::WrongType),
         }
     }
@@ -214,7 +235,16 @@ impl Printf for i8 {
 
 impl Printf for u8 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
-        (*self as u64).format(spec)
+        match spec.conversion_type {
+            ConversionType::Char => {
+                if self.is_ascii() {
+                    char::from(*self).format(spec)
+                } else {
+                    Err(PrintfError::WrongType)
+                }
+            }
+            _ => (*self as u64).format(spec),
+        }
     }
     fn as_int(&self) -> Option<i32> {
         Some(*self as i32)
@@ -470,6 +500,28 @@ impl Printf for char {
 impl Printf for String {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (self as &str).format(spec)
+    }
+    fn as_int(&self) -> Option<i32> {
+        None
+    }
+}
+
+impl Printf for &CStr {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
+        if let Ok(s) = self.to_str() {
+            s.format(spec)
+        } else {
+            Err(PrintfError::WrongType)
+        }
+    }
+    fn as_int(&self) -> Option<i32> {
+        None
+    }
+}
+
+impl Printf for CString {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
+        self.as_c_str().format(spec)
     }
     fn as_int(&self) -> Option<i32> {
         None
