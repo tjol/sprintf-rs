@@ -3,6 +3,7 @@
 
 use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
+use std::mem::size_of;
 use std::os::raw::c_char;
 
 use libc::snprintf;
@@ -132,4 +133,29 @@ fn test_sanity() {
     let bytes = "∆".as_bytes();
     assert!(bytes.len() > 1);
     assert_eq!(sprintf!("%c", bytes[0]), Err(PrintfError::WrongType));
+}
+
+#[test]
+fn test_ptr() {
+    let buf: [u8; 4] = [0; 4];
+    let ptr_const: *const u8 = buf.as_ptr();
+    let ptr_mut: *mut u8 = ptr_const.cast_mut();
+
+    // pointer: expects usize and pointer to have the same size
+    assert_eq!(size_of::<usize>(), size_of::<*const u8>(),);
+    check_fmt("%p", ptr_const);
+    check_fmt("%p", ptr_mut);
+
+    // numeric: works the same as libc if you use the correct length specifier
+    if size_of::<usize>() == size_of::<u64>() {
+        check_fmt("%llx", ptr_const);
+        check_fmt("%llx", ptr_mut);
+        check_fmt("%#llx", ptr_const);
+        check_fmt("%#llx", ptr_mut);
+    } else if size_of::<usize>() == size_of::<u32>() {
+        check_fmt("%x", ptr_const);
+        check_fmt("%x", ptr_mut);
+        check_fmt("%#x", ptr_const);
+        check_fmt("%#x", ptr_mut);
+    }
 }
