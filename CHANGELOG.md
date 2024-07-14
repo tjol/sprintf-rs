@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## v0.3.1 (2024-07-14)
+
+ * pointer types can be formatted with `%p` in the same way as `usize` (PR [#9][PR9], thanks to  [Flávio J. Saraiva (flaviojs)][flaviojs])
+
+[PR9]: https://github.com/tjol/sprintf-rs/pull/9
+
+## v0.3.0 (2024-05-31)
 
  * More standard string and character types (PR [#7][PR7], thanks to  [Flávio J. Saraiva (flaviojs)][flaviojs])
     * Support `CString` and `&CStr` for `%s`, assuming the're UTF-8 encoded
