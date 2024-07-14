@@ -527,3 +527,21 @@ impl Printf for CString {
         None
     }
 }
+
+impl<T> Printf for *const T {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
+        (*self as usize).format(spec)
+    }
+    fn as_int(&self) -> Option<i32> {
+        None
+    }
+}
+
+impl<T> Printf for *mut T {
+    fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
+        (*self as usize).format(spec)
+    }
+    fn as_int(&self) -> Option<i32> {
+        None
+    }
+}
