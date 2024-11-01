@@ -104,16 +104,20 @@ pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
     // find the first %
     let mut res = Vec::new();
 
-    if let Some((verbatim_prefix, rest)) = fmt.split_once('%') {
-        if !verbatim_prefix.is_empty() {
-            res.push(FormatElement::Verbatim(verbatim_prefix));
+    let mut rem = fmt;
+
+    while !rem.is_empty() {
+        if let Some((verbatim_prefix, rest)) = rem.split_once('%') {
+            if !verbatim_prefix.is_empty() {
+                res.push(FormatElement::Verbatim(verbatim_prefix));
+            }
+            let (spec, rest) = take_conversion_specifier(rest)?;
+            res.push(FormatElement::Format(spec));
+            rem = rest;
+        } else {
+            res.push(FormatElement::Verbatim(rem));
+            break;
         }
-        let (spec, rest) = take_conversion_specifier(rest)?;
-        res.push(FormatElement::Format(spec));
-        res.append(&mut parse_format_string(rest)?);
-        return Ok(res);
-    } else if !fmt.is_empty() {
-        res.push(FormatElement::Verbatim(fmt));
     }
 
     Ok(res)
