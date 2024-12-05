@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.0 (2024-12-05)
+
+ * `FormatElement` now borrows a `&str` instead of owning a `String`, leading to fewer allocations and a significant performance improvement (PR [#10][PR10], thanks to [Samuel Collins (Humandoodlebug)][Humandoodlebug]).
+   - this is a __breaking API change__ to the lower-level v0.2 API
+   - the original and primary (v0.1) API is unchanged
+
+[PR10]: https://github.com/tjol/sprintf-rs/pull/10
+[Humandoodlebug]: https://github.com/Humandoodlebug
+
 ## v0.3.1 (2024-07-14)
 
  * pointer types can be formatted with `%p` in the same way as `usize` (PR [#9][PR9], thanks to  [Flávio J. Saraiva (flaviojs)][flaviojs])
