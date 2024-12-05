@@ -6,9 +6,9 @@ use crate::{PrintfError, Result};
 /// verbatim, or a format specifier that should be replaced based on an argument
 /// to the [vsprintf](crate::vsprintf) call.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FormatElement {
+pub enum FormatElement<'a> {
     /// Some characters that are copied to the output as-is
-    Verbatim(String),
+    Verbatim(&'a str),
     /// A format specifier
     Format(ConversionSpecifier),
 }
@@ -85,7 +85,7 @@ pub enum ConversionType {
 ///     };
 ///     let fmt = "Hello %#06x";
 ///     let parsed = parse_format_string(fmt).unwrap();
-///     assert_eq!(parsed[0], FormatElement::Verbatim("Hello ".to_owned()));
+///     assert_eq!(parsed[0], FormatElement::Verbatim("Hello "));
 ///     assert_eq!(
 ///         parsed[1],
 ///         FormatElement::Format(ConversionSpecifier {
@@ -103,14 +103,21 @@ pub enum ConversionType {
 pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
     // find the first %
     let mut res = Vec::new();
-    let parts: Vec<&str> = fmt.splitn(2, '%').collect();
-    if !parts[0].is_empty() {
-        res.push(FormatElement::Verbatim(parts[0].to_owned()));
-    }
-    if parts.len() > 1 {
-        let (spec, rest) = take_conversion_specifier(parts[1])?;
-        res.push(FormatElement::Format(spec));
-        res.append(&mut parse_format_string(rest)?);
+
+    let mut rem = fmt;
+
+    while !rem.is_empty() {
+        if let Some((verbatim_prefix, rest)) = rem.split_once('%') {
+            if !verbatim_prefix.is_empty() {
+                res.push(FormatElement::Verbatim(verbatim_prefix));
+            }
+            let (spec, rest) = take_conversion_specifier(rest)?;
+            res.push(FormatElement::Format(spec));
+            rem = rest;
+        } else {
+            res.push(FormatElement::Verbatim(rem));
+            break;
+        }
     }
 
     Ok(res)
