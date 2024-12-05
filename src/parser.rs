@@ -85,7 +85,7 @@ pub enum ConversionType {
 ///     };
 ///     let fmt = "Hello %#06x";
 ///     let parsed = parse_format_string(fmt).unwrap();
-///     assert_eq!(parsed[0], FormatElement::Verbatim("Hello ".to_owned()));
+///     assert_eq!(parsed[0], FormatElement::Verbatim("Hello "));
 ///     assert_eq!(
 ///         parsed[1],
 ///         FormatElement::Format(ConversionSpecifier {
