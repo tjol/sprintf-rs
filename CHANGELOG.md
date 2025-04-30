@@ -1,13 +1,21 @@
 # Changelog
 
+## v0.4.1 (2025-04-30)
+
+ * Update to [thiserror] 2.0 (PR [#11][PR11], thanks to [Samuel Collins (sd-collins)][sd-collins])
+ * Add support for padding strings and chars (e.g. `%10s`) (PR [#13][PR13], thanks to [Samuel Collins (sd-collins)][sd-collins])
+
+[PR11]: https://github.com/tjol/sprintf-rs/pull/11
+[PR13]: https://github.com/tjol/sprintf-rs/pull/13
+
 ## v0.4.0 (2024-12-05)
 
- * `FormatElement` now borrows a `&str` instead of owning a `String`, leading to fewer allocations and a significant performance improvement (PR [#10][PR10], thanks to [Samuel Collins (Humandoodlebug)][Humandoodlebug]).
+ * `FormatElement` now borrows a `&str` instead of owning a `String`, leading to fewer allocations and a significant performance improvement (PR [#10][PR10], thanks to [Samuel Collins (sd-collins)][sd-collins]).
    - this is a __breaking API change__ to the lower-level v0.2 API
    - the original and primary (v0.1) API is unchanged
 
 [PR10]: https://github.com/tjol/sprintf-rs/pull/10
-[Humandoodlebug]: https://github.com/Humandoodlebug
+[sd-collins]: https://github.com/sd-collins
 
 ## v0.3.1 (2024-07-14)
 
