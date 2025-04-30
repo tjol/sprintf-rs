@@ -472,7 +472,29 @@ impl Printf for f32 {
 impl Printf for &str {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         if spec.conversion_type == ConversionType::String {
-            Ok((*self).to_owned())
+            let mut s = String::new();
+
+            let width: usize = match spec.width {
+                NumericParam::Literal(w) => w,
+                _ => {
+                    return Err(PrintfError::Unknown); // should not happen at this point!!
+                }
+            }
+            .try_into()
+            .unwrap_or_default();
+
+            if spec.left_adj {
+                s.push_str(self);
+                while s.len() < width {
+                    s.push(' ');
+                }
+            } else {
+                while s.len() + self.len() < width {
+                    s.push(' ');
+                }
+                s.push_str(self);
+            }
+            Ok(s)
         } else {
             Err(PrintfError::WrongType)
         }
@@ -486,7 +508,27 @@ impl Printf for char {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         if spec.conversion_type == ConversionType::Char {
             let mut s = String::new();
-            s.push(*self);
+
+            let width: usize = match spec.width {
+                NumericParam::Literal(w) => w,
+                _ => {
+                    return Err(PrintfError::Unknown); // should not happen at this point!!
+                }
+            }
+            .try_into()
+            .unwrap_or_default();
+
+            if spec.left_adj {
+                s.push(*self);
+                while s.len() < width {
+                    s.push(' ');
+                }
+            } else {
+                while s.len() + self.len_utf8() < width {
+                    s.push(' ');
+                }
+                s.push(*self);
+            }
             Ok(s)
         } else {
             Err(PrintfError::WrongType)

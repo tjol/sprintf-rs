@@ -116,6 +116,10 @@ fn test_str() {
     let c_string = CString::new("test").unwrap();
     check_fmt("%s", c_string.as_c_str());
     check_fmt("%s", c_string);
+    check_fmt_s("%4s", "A");
+    check_fmt_s("%4s", "𒀀"); // multi-byte character test (4 bytes)
+    check_fmt_s("%-4sX", "A");
+    check_fmt_s("%-4sX", "𒀀"); // multi-byte character test (4 bytes)
 }
 
 #[test]
@@ -125,6 +129,8 @@ fn test_char() {
     check_fmt("%c", b'x' as c_char);
     check_fmt("%c", u16::try_from('x').unwrap());
     check_fmt("%c", u32::try_from('x').unwrap());
+    check_fmt("%4c", 'A');
+    check_fmt("%-4cX", 'A');
 }
 
 #[test]
