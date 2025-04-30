@@ -2,7 +2,7 @@
 
 ## v0.4.1 (2025-04-30)
 
- * Update to [thiserror] 2.0 (PR [#11][PR11], thanks to [Samuel Collins (sd-collins)][sd-collins])
+ * Update to thiserror 2.0 (PR [#11][PR11], thanks to [Samuel Collins (sd-collins)][sd-collins])
  * Add support for padding strings and chars (e.g. `%10s`) (PR [#13][PR13], thanks to [Samuel Collins (sd-collins)][sd-collins])
 
 [PR11]: https://github.com/tjol/sprintf-rs/pull/11
