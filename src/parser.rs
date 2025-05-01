@@ -160,11 +160,9 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
         Some('q') => ConversionType::QuotedString,
         Some('%') => ConversionType::PercentSign,
         Some(_) => {
-            println!("Some(_)");
             return Err(FormatError::ParseError);
         }
         None => {
-            println!("None");
             return Err(FormatError::ParseError);
         }
     };

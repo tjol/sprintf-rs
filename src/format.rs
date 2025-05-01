@@ -464,7 +464,6 @@ impl Format for &str {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
             ConversionType::String => {
-                println!("String");
                 let mut s = String::new();
 
                 let width: usize = match spec.width {
@@ -487,7 +486,6 @@ impl Format for &str {
                 Ok(s)
             }
             ConversionType::QuotedString => {
-                println!("QuotedString");
                 let mut quoted = String::with_capacity(self.len() + 2);
                 quoted.push('"');
                 for byte in self.bytes() {
