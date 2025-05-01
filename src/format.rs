@@ -1,23 +1,20 @@
+use fhex::ToHex;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 
 use crate::{
+    FormatError, Result,
     parser::{ConversionSpecifier, ConversionType, NumericParam},
-    PrintfError, Result,
 };
 
-/// Trait for types that can be formatted using printf strings
-///
-/// Implemented for the basic types and shouldn't need implementing for
-/// anything else.
-pub trait Printf {
+pub trait Format {
     /// Format `self` based on the conversion configured in `spec`.
     fn format(&self, spec: &ConversionSpecifier) -> Result<String>;
     /// Get `self` as an integer for use as a field width, if possible.
     fn as_int(&self) -> Option<i32>;
 }
 
-impl Printf for u64 {
+impl Format for u64 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         let mut base = 10;
         let mut digits: Vec<char> = "0123456789".chars().collect();
@@ -40,7 +37,7 @@ impl Printf for u64 {
                 alt_prefix = "0";
             }
             _ => {
-                return Err(PrintfError::WrongType);
+                return Err(FormatError::WrongType);
             }
         }
         let prefix = if spec.alt_form {
@@ -49,7 +46,6 @@ impl Printf for u64 {
             String::new()
         };
 
-        // Build the actual number (in reverse)
         let mut rev_num = String::new();
         let mut n = *self;
         while n > 0 {
@@ -61,12 +57,8 @@ impl Printf for u64 {
             rev_num.push('0');
         }
 
-        // Take care of padding
         let width: usize = match spec.width {
             NumericParam::Literal(w) => w,
-            _ => {
-                return Err(PrintfError::Unknown); // should not happen at this point!!
-            }
         }
         .try_into()
         .unwrap_or_default();
@@ -96,12 +88,10 @@ impl Printf for u64 {
     }
 }
 
-impl Printf for i64 {
+impl Format for i64 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
-            // signed integer format
             ConversionType::DecInt => {
-                // do I need a sign prefix?
                 let negative = *self < 0;
                 let abs_val = self.abs();
                 let sign_prefix = if negative {
@@ -117,13 +107,9 @@ impl Printf for i64 {
                 let mut mod_spec = *spec;
                 mod_spec.width = match spec.width {
                     NumericParam::Literal(w) => NumericParam::Literal(w - sign_prefix.len() as i32),
-                    _ => {
-                        return Err(PrintfError::Unknown);
-                    }
                 };
 
                 let formatted = (abs_val as u64).format(&mod_spec)?;
-                // put the sign a after any leading spaces
                 let mut actual_number = &formatted[0..];
                 let mut leading_spaces = &formatted[0..0];
                 if let Some(first_non_space) = formatted.find(|c| c != ' ') {
@@ -132,11 +118,10 @@ impl Printf for i64 {
                 }
                 Ok(leading_spaces.to_owned() + &sign_prefix + actual_number)
             }
-            // unsigned-only formats
             ConversionType::HexIntLower | ConversionType::HexIntUpper | ConversionType::OctInt => {
                 (*self as u64).format(spec)
             }
-            _ => Err(PrintfError::WrongType),
+            _ => Err(FormatError::WrongType),
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -144,7 +129,7 @@ impl Printf for i64 {
     }
 }
 
-impl Printf for i32 {
+impl Format for i32 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
             // signed integer format
@@ -153,7 +138,7 @@ impl Printf for i32 {
             ConversionType::HexIntLower | ConversionType::HexIntUpper | ConversionType::OctInt => {
                 (*self as u32).format(spec)
             }
-            _ => Err(PrintfError::WrongType),
+            _ => Err(FormatError::WrongType),
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -161,14 +146,14 @@ impl Printf for i32 {
     }
 }
 
-impl Printf for u32 {
+impl Format for u32 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
             ConversionType::Char => {
                 if let Some(c) = char::from_u32(*self) {
                     c.format(spec)
                 } else {
-                    Err(PrintfError::WrongType)
+                    Err(FormatError::WrongType)
                 }
             }
             _ => (*self as u64).format(spec),
@@ -179,16 +164,14 @@ impl Printf for u32 {
     }
 }
 
-impl Printf for i16 {
+impl Format for i16 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
-            // signed integer format
             ConversionType::DecInt => (*self as i64).format(spec),
-            // unsigned-only formats
             ConversionType::HexIntLower | ConversionType::HexIntUpper | ConversionType::OctInt => {
                 (*self as u16).format(spec)
             }
-            _ => Err(PrintfError::WrongType),
+            _ => Err(FormatError::WrongType),
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -196,14 +179,14 @@ impl Printf for i16 {
     }
 }
 
-impl Printf for u16 {
+impl Format for u16 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
             ConversionType::Char => {
                 if let Some(Ok(c)) = char::decode_utf16([*self]).next() {
                     c.format(spec)
                 } else {
-                    Err(PrintfError::WrongType)
+                    Err(FormatError::WrongType)
                 }
             }
             _ => (*self as u64).format(spec),
@@ -214,18 +197,16 @@ impl Printf for u16 {
     }
 }
 
-impl Printf for i8 {
+impl Format for i8 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
-            // signed integer format
             ConversionType::DecInt => (*self as i64).format(spec),
-            // unsigned-only formats
             ConversionType::HexIntLower | ConversionType::HexIntUpper | ConversionType::OctInt => {
                 (*self as u8).format(spec)
             }
             // c_char
             ConversionType::Char => (*self as u8).format(spec),
-            _ => Err(PrintfError::WrongType),
+            _ => Err(FormatError::WrongType),
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -233,14 +214,14 @@ impl Printf for i8 {
     }
 }
 
-impl Printf for u8 {
+impl Format for u8 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         match spec.conversion_type {
             ConversionType::Char => {
                 if self.is_ascii() {
                     char::from(*self).format(spec)
                 } else {
-                    Err(PrintfError::WrongType)
+                    Err(FormatError::WrongType)
                 }
             }
             _ => (*self as u64).format(spec),
@@ -251,7 +232,7 @@ impl Printf for u8 {
     }
 }
 
-impl Printf for usize {
+impl Format for usize {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (*self as u64).format(spec)
     }
@@ -260,7 +241,7 @@ impl Printf for usize {
     }
 }
 
-impl Printf for isize {
+impl Format for isize {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (*self as u64).format(spec)
     }
@@ -269,12 +250,11 @@ impl Printf for isize {
     }
 }
 
-impl Printf for f64 {
+impl Format for f64 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         let mut prefix = String::new();
-        let mut number = String::new();
+        let mut number;
 
-        // set up the sign
         if self.is_sign_negative() {
             prefix.push('-');
         } else if spec.space_sign {
@@ -287,21 +267,17 @@ impl Printf for f64 {
             let mut use_scientific = false;
             let mut exp_symb = 'e';
             let mut strip_trailing_0s = false;
-            let mut abs = self.abs();
-            let mut exponent = abs.log10().floor() as i32;
-            let mut precision = match spec.precision {
-                NumericParam::Literal(p) => p,
-                _ => {
-                    return Err(PrintfError::Unknown);
-                }
-            };
+            let mut use_hex = false;
+            let mut hex_uppercase = false;
+            let abs = self.abs();
+            let mut exponent;
+            let NumericParam::Literal(mut precision) = spec.precision;
             if precision <= 0 {
                 precision = 0;
             }
+
             match spec.conversion_type {
-                ConversionType::DecFloatLower | ConversionType::DecFloatUpper => {
-                    // default
-                }
+                ConversionType::DecFloatLower | ConversionType::DecFloatUpper => {}
                 ConversionType::SciFloatLower => {
                     use_scientific = true;
                 }
@@ -311,44 +287,59 @@ impl Printf for f64 {
                 }
                 ConversionType::CompactFloatLower | ConversionType::CompactFloatUpper => {
                     if spec.conversion_type == ConversionType::CompactFloatUpper {
-                        exp_symb = 'E'
+                        exp_symb = 'E';
                     }
                     strip_trailing_0s = true;
                     if precision == 0 {
                         precision = 1;
                     }
-                    // exponent signifies significant digits - we must round now
-                    // to (re)calculate the exponent
+                    exponent = abs.log10().floor() as i32;
                     let rounding_factor = 10.0_f64.powf((precision - 1 - exponent) as f64);
                     let rounded_fixed = (abs * rounding_factor).round();
-                    abs = rounded_fixed / rounding_factor;
-                    exponent = abs.log10().floor() as i32;
+                    let abs_rounded = rounded_fixed / rounding_factor;
+                    exponent = abs_rounded.log10().floor() as i32;
                     if exponent < -4 || exponent >= precision {
                         use_scientific = true;
                         precision -= 1;
                     } else {
-                        // precision specifies the number of significant digits
                         precision -= 1 + exponent;
                     }
                 }
+                ConversionType::HexFloatLower => {
+                    use_hex = true;
+                }
+                ConversionType::HexFloatUpper => {
+                    use_hex = true;
+                    hex_uppercase = true;
+                }
                 _ => {
-                    return Err(PrintfError::WrongType);
+                    return Err(FormatError::WrongType);
                 }
             }
 
-            if use_scientific {
+            if use_hex {
+                number = abs.to_hex();
+
+                if number.starts_with('-') {
+                    number = number[1..].to_string();
+                }
+
+                if hex_uppercase {
+                    number = number.to_uppercase();
+                }
+            } else if use_scientific {
+                exponent = abs.log10().floor() as i32;
                 let mut normal = abs / 10.0_f64.powf(exponent as f64);
+                number = String::new();
 
                 if precision > 0 {
                     let mut int_part = normal.trunc();
                     let mut exp_factor = 10.0_f64.powf(precision as f64);
                     let mut tail = ((normal - int_part) * exp_factor).round() as u64;
                     while tail >= exp_factor as u64 {
-                        // Overflow, must round
                         int_part += 1.0;
                         tail -= exp_factor as u64;
                         if int_part >= 10.0 {
-                            // keep same precision - which means changing exponent
                             exponent += 1;
                             exp_factor /= 10.0;
                             normal /= 10.0;
@@ -374,17 +365,15 @@ impl Printf for f64 {
                 number.push(exp_symb);
                 number.push_str(&format!("{:+03}", exponent));
             } else {
+                number = String::new();
                 if precision > 0 {
                     let mut int_part = abs.trunc();
                     let exp_factor = 10.0_f64.powf(precision as f64);
                     let mut tail = ((abs - int_part) * exp_factor).round() as u64;
                     let mut rev_tail_str = String::new();
                     if tail >= exp_factor as u64 {
-                        // overflow - we must round up
                         int_part += 1.0;
                         tail -= exp_factor as u64;
-                        // no need to change the exponent as we don't have one
-                        // (not scientific notation)
                     }
                     for _ in 0..precision {
                         rev_tail_str.push((b'0' + (tail % 10) as u8) as char);
@@ -395,17 +384,21 @@ impl Printf for f64 {
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
+                        if number.ends_with('.') {
+                            number.pop();
+                        }
                     }
                 } else {
                     number.push_str(&format!("{}", abs.round()));
                 }
             }
         } else {
-            // not finite
+            number = String::new();
             match spec.conversion_type {
                 ConversionType::DecFloatLower
                 | ConversionType::SciFloatLower
-                | ConversionType::CompactFloatLower => {
+                | ConversionType::CompactFloatLower
+                | ConversionType::HexFloatLower => {
                     if self.is_infinite() {
                         number.push_str("inf")
                     } else {
@@ -414,7 +407,8 @@ impl Printf for f64 {
                 }
                 ConversionType::DecFloatUpper
                 | ConversionType::SciFloatUpper
-                | ConversionType::CompactFloatUpper => {
+                | ConversionType::CompactFloatUpper
+                | ConversionType::HexFloatUpper => {
                     if self.is_infinite() {
                         number.push_str("INF")
                     } else {
@@ -422,16 +416,13 @@ impl Printf for f64 {
                     }
                 }
                 _ => {
-                    return Err(PrintfError::WrongType);
+                    return Err(FormatError::WrongType);
                 }
             }
         }
         // Take care of padding
         let width: usize = match spec.width {
             NumericParam::Literal(w) => w,
-            _ => {
-                return Err(PrintfError::Unknown); // should not happen at this point!!
-            }
         }
         .try_into()
         .unwrap_or_default();
@@ -460,7 +451,7 @@ impl Printf for f64 {
     }
 }
 
-impl Printf for f32 {
+impl Format for f32 {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (*self as f64).format(spec)
     }
@@ -469,34 +460,53 @@ impl Printf for f32 {
     }
 }
 
-impl Printf for &str {
+impl Format for &str {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
-        if spec.conversion_type == ConversionType::String {
-            let mut s = String::new();
+        match spec.conversion_type {
+            ConversionType::String => {
+                println!("String");
+                let mut s = String::new();
 
-            let width: usize = match spec.width {
-                NumericParam::Literal(w) => w,
-                _ => {
-                    return Err(PrintfError::Unknown); // should not happen at this point!!
+                let width: usize = match spec.width {
+                    NumericParam::Literal(w) => w,
                 }
-            }
-            .try_into()
-            .unwrap_or_default();
+                .try_into()
+                .unwrap_or_default();
 
-            if spec.left_adj {
-                s.push_str(self);
-                while s.len() < width {
-                    s.push(' ');
+                if spec.left_adj {
+                    s.push_str(self);
+                    while s.len() < width {
+                        s.push(' ');
+                    }
+                } else {
+                    while s.len() + self.len() < width {
+                        s.push(' ');
+                    }
+                    s.push_str(self);
                 }
-            } else {
-                while s.len() + self.len() < width {
-                    s.push(' ');
-                }
-                s.push_str(self);
+                Ok(s)
             }
-            Ok(s)
-        } else {
-            Err(PrintfError::WrongType)
+            ConversionType::QuotedString => {
+                println!("QuotedString");
+                let mut quoted = String::with_capacity(self.len() + 2);
+                quoted.push('"');
+                for byte in self.bytes() {
+                    match byte {
+                        b'"' => quoted.push_str("\\\""),
+                        b'\\' => quoted.push_str("\\\\"),
+                        b'\n' => quoted.push_str("\\n"),
+                        b'\r' => quoted.push_str("\\r"),
+                        b'\0' => quoted.push_str("\\0"),
+                        b if (1..=31).contains(&b) || b == 127 => {
+                            quoted.push_str(&format!("\\{}", b));
+                        }
+                        b => quoted.push(b as char),
+                    }
+                }
+                quoted.push('"');
+                Ok(quoted)
+            }
+            _ => Err(FormatError::WrongType),
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -504,16 +514,13 @@ impl Printf for &str {
     }
 }
 
-impl Printf for char {
+impl Format for char {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         if spec.conversion_type == ConversionType::Char {
             let mut s = String::new();
 
             let width: usize = match spec.width {
                 NumericParam::Literal(w) => w,
-                _ => {
-                    return Err(PrintfError::Unknown); // should not happen at this point!!
-                }
             }
             .try_into()
             .unwrap_or_default();
@@ -531,7 +538,7 @@ impl Printf for char {
             }
             Ok(s)
         } else {
-            Err(PrintfError::WrongType)
+            Err(FormatError::WrongType)
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -539,7 +546,7 @@ impl Printf for char {
     }
 }
 
-impl Printf for String {
+impl Format for String {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (self as &str).format(spec)
     }
@@ -548,12 +555,12 @@ impl Printf for String {
     }
 }
 
-impl Printf for &CStr {
+impl Format for &CStr {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         if let Ok(s) = self.to_str() {
             s.format(spec)
         } else {
-            Err(PrintfError::WrongType)
+            Err(FormatError::WrongType)
         }
     }
     fn as_int(&self) -> Option<i32> {
@@ -561,7 +568,7 @@ impl Printf for &CStr {
     }
 }
 
-impl Printf for CString {
+impl Format for CString {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         self.as_c_str().format(spec)
     }
@@ -570,7 +577,7 @@ impl Printf for CString {
     }
 }
 
-impl<T> Printf for *const T {
+impl<T> Format for *const T {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (*self as usize).format(spec)
     }
@@ -579,7 +586,7 @@ impl<T> Printf for *const T {
     }
 }
 
-impl<T> Printf for *mut T {
+impl<T> Format for *mut T {
     fn format(&self, spec: &ConversionSpecifier) -> Result<String> {
         (*self as usize).format(spec)
     }

@@ -1,18 +1,13 @@
 [package]
-name = "sprintf"
-version = "0.4.1"
-edition = "2018"
-authors = ["Thomas Jollans <tjol@tjol.eu>"]
+name = "lformat"
+version = "0.1.0"
+edition = "2024"
+authors = ["Thomas Jollans <tjol@tjol.eu>", "lyranowl <nikita.malina23@gmail.com>"]
 license = "MIT"
-description = "Clone of C s(n)printf in Rust"
-repository = "https://github.com/tjol/sprintf-rs"
-keywords = ["printf", "text", "string"]
-categories = ["template-engine", "wasm"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Clone of Lua `string.format` in Rust based on C `s(n)printf`"
+repository = "https://github.com/reloginn/lformat"
+keywords = ["lua", "format", "text", "string"]
 
 [dependencies]
 thiserror = "2.0"
-
-[dev-dependencies]
-libc = "0.2"
+fhex = "1.0"
