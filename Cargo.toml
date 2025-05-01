@@ -1,6 +1,6 @@
 [package]
 name = "lformat"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Thomas Jollans <tjol@tjol.eu>", "lyranowl <nikita.malina23@gmail.com>"]
 license = "MIT"
