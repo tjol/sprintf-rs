@@ -131,7 +131,7 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
         space_sign: false,
         force_sign: false,
         width: NumericParam::Literal(0),
-        precision: NumericParam::Literal(6),
+        precision: NumericParam::FromArgument, // Placeholder - must not be returned!
         // ignore length modifier
         conversion_type: ConversionType::DecInt,
     };
@@ -202,6 +202,18 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
             return Err(PrintfError::ParseError);
         }
     };
+
+    if spec.precision == NumericParam::FromArgument {
+        // If precision is not specified, set to default value
+        let p = if spec.conversion_type == ConversionType::String {
+            // Default to max limit (aka no limit) for strings
+            i32::MAX
+        } else {
+            // Default to 6 for all other types
+            6
+        };
+        spec.precision = NumericParam::Literal(p);
+    }
 
     Ok((spec, &s[1..]))
 }

@@ -112,6 +112,10 @@ fn test_float() {
 #[test]
 fn test_str() {
     check_fmt_s("test %% with string: %s yay\n", "FOO");
+    check_fmt_s(
+        "%s",
+        "testing with a slightly longer string to make sure it doesn't truncate",
+    );
     check_fmt("test char %c", '~');
     let c_string = CString::new("test").unwrap();
     check_fmt("%s", c_string.as_c_str());
@@ -120,6 +124,20 @@ fn test_str() {
     check_fmt_s("%4s", "𒀀"); // multi-byte character test (4 bytes)
     check_fmt_s("%-4sX", "A");
     check_fmt_s("%-4sX", "𒀀"); // multi-byte character test (4 bytes)
+    check_fmt_s("%1.3s", "ABCDEFG");
+    check_fmt_s("%1.4s", "𒀀𒀀"); // multi-byte character test (4 bytes per char)
+    check_fmt_s("%8.4s", "ABCDEFG");
+
+    // glibc does not handle UTF-8 strings correctly when truncating, but we cannot produce malformed UTF-8
+    // strings in Rust. Instead, we round down to the nearest character boundary.
+    assert_eq!(sprintf!("%1.1s", "𒀀𒀀𒀀").unwrap(), " ");
+    assert_eq!(sprintf!("%1.2s", "𒀀𒀀𒀀").unwrap(), " ");
+    assert_eq!(sprintf!("%1.3s", "𒀀𒀀𒀀").unwrap(), " ");
+    assert_eq!(sprintf!("%1.4s", "𒀀𒀀𒀀").unwrap(), "𒀀");
+    assert_eq!(sprintf!("%1.5s", "𒀀𒀀𒀀").unwrap(), "𒀀");
+    assert_eq!(sprintf!("%1.6s", "𒀀𒀀𒀀").unwrap(), "𒀀");
+    assert_eq!(sprintf!("%1.7s", "𒀀𒀀𒀀").unwrap(), "𒀀");
+    assert_eq!(sprintf!("%1.8s", "𒀀𒀀𒀀").unwrap(), "𒀀𒀀");
 }
 
 #[test]

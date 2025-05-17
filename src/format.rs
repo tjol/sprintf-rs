@@ -474,6 +474,25 @@ impl Printf for &str {
         if spec.conversion_type == ConversionType::String {
             let mut s = String::new();
 
+            // Take care of precision, putting the truncated string in `content`
+            let precision: usize = match spec.precision {
+                NumericParam::Literal(p) => p,
+                _ => {
+                    return Err(PrintfError::Unknown); // should not happen at this point!!
+                }
+            }
+            .try_into()
+            .unwrap_or_default();
+            let content_len = {
+                let mut content_len = precision.min(self.len());
+                while !self.is_char_boundary(content_len) {
+                    content_len -= 1;
+                }
+                content_len
+            };
+            let content = &self[..content_len];
+
+            // Pad to width if needed, putting the padded string in `s`
             let width: usize = match spec.width {
                 NumericParam::Literal(w) => w,
                 _ => {
@@ -482,18 +501,18 @@ impl Printf for &str {
             }
             .try_into()
             .unwrap_or_default();
-
             if spec.left_adj {
-                s.push_str(self);
+                s.push_str(content);
                 while s.len() < width {
                     s.push(' ');
                 }
             } else {
-                while s.len() + self.len() < width {
+                while s.len() + content.len() < width {
                     s.push(' ');
                 }
-                s.push_str(self);
+                s.push_str(content);
             }
+
             Ok(s)
         } else {
             Err(PrintfError::WrongType)
