@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.2 (2025-05-17)
+
+ * Add support for truncating string arguments (e.g. `%1.3s`) (PR [#15][PR15], thanks to [Samuel Collins (sd-collins)][sd-collins])
+
+[PR15]: https://github.com/tjol/sprintf-rs/pull/15
+
 ## v0.4.1 (2025-04-30)
 
  * Update to thiserror 2.0 (PR [#11][PR11], thanks to [Samuel Collins (sd-collins)][sd-collins])

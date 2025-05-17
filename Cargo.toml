@@ -1,6 +1,6 @@
 [package]
 name = "sprintf"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2018"
 authors = ["Thomas Jollans <tjol@tjol.eu>"]
 license = "MIT"
