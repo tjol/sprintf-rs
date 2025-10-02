@@ -74,6 +74,7 @@ fn test_int() {
 fn test_float() {
     check_fmt("%f", -46.38);
     check_fmt("%012.3f", 1.2);
+    check_fmt("%0012.3f", 1.2);
     check_fmt("%012.3e", 1.7);
     check_fmt("%e", 1e300);
     check_fmt("%012.3g%%!", 2.6);
@@ -83,6 +84,7 @@ fn test_float() {
     check_fmt("% 7.4E", -120.3);
     check_fmt("%-10F", f64::INFINITY);
     check_fmt("%+010F", f64::INFINITY);
+    check_fmt("%.0f", 9.99);
     check_fmt("%.1f", 999.99);
     check_fmt("%.1f", 9.99);
     check_fmt("%.1e", 9.99);
