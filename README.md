@@ -19,5 +19,6 @@ let s = sprintf!("%d + %d = %d\n", 3, 9, 3+9).unwrap();
 assert_eq!(s, "3 + 9 = 12\n");
 ```
 
-`libc` is a dev dependency as it is used in the tests to compare results. `std`
-is used for some maths functions.
+`libc` is a dev dependency as it is used in the tests to compare results. This
+crate depends on `std` for string formatting, memory allocation, and
+floating-point maths.
