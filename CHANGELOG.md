@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## v0.4.3 (2025-10-07)
 
  * Allow width and precision to start with `0` (e.g. `%005.02f`) (PR [#17][PR17], thanks to [Colin Snover (csnover)][csnover])
 
