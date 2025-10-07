@@ -1,5 +1,12 @@
 # Changelog
 
+## unreleased
+
+ * Allow width and precision to start with `0` (e.g. `%005.02f`) (PR [#17][PR17], thanks to [Colin Snover (csnover)][csnover])
+
+[PR17]: https://github.com/tjol/sprintf-rs/pull/17
+[csnover]: https://github.com/csnover
+
 ## v0.4.2 (2025-05-17)
 
  * Add support for truncating string arguments (e.g. `%1.3s`) (PR [#15][PR15], thanks to [Samuel Collins (sd-collins)][sd-collins])
