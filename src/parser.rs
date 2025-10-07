@@ -221,7 +221,7 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
 fn take_numeric_param(s: &str) -> (NumericParam, &str) {
     match s.chars().next() {
         Some('*') => (NumericParam::FromArgument, &s[1..]),
-        Some(digit) if ('1'..='9').contains(&digit) => {
+        Some(digit) if ('0'..='9').contains(&digit) => {
             let mut s = s;
             let mut w = 0;
             loop {
