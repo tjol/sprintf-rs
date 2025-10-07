@@ -100,7 +100,7 @@ pub enum ConversionType {
 ///         })
 ///     );
 ///
-pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement>> {
+pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement<'_>>> {
     // find the first %
     let mut res = Vec::new();
 
