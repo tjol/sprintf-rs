@@ -375,6 +375,7 @@ impl Printf for f64 {
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
+                        number = number.trim_end_matches('.').to_owned();
                     }
                 } else {
                     number.push_str(&format!("{}", normal.round()));
@@ -403,6 +404,7 @@ impl Printf for f64 {
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
+                        number = number.trim_end_matches('.').to_owned();
                     }
                 } else {
                     number.push_str(&format!("{}", abs.round()));
