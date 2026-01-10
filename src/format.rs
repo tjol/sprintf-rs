@@ -288,7 +288,11 @@ impl Printf for f64 {
             let mut exp_symb = 'e';
             let mut strip_trailing_0s = false;
             let mut abs = self.abs();
-            let mut exponent = abs.log10().floor() as i32;
+            let mut exponent = if abs == 0.0 {
+                0
+            } else {
+                abs.log10().floor() as i32
+            };
             let mut precision = match spec.precision {
                 NumericParam::Literal(p) => p,
                 _ => {
@@ -322,7 +326,11 @@ impl Printf for f64 {
                     let rounding_factor = 10.0_f64.powf((precision - 1 - exponent) as f64);
                     let rounded_fixed = (abs * rounding_factor).round();
                     abs = rounded_fixed / rounding_factor;
-                    exponent = abs.log10().floor() as i32;
+                    exponent = if abs == 0.0 {
+                        0
+                    } else {
+                        abs.log10().floor() as i32
+                    };
                     if exponent < -4 || exponent >= precision {
                         use_scientific = true;
                         precision -= 1;
@@ -367,6 +375,7 @@ impl Printf for f64 {
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
+                        number = number.trim_end_matches('.').to_owned();
                     }
                 } else {
                     number.push_str(&format!("{}", normal.round()));
@@ -395,6 +404,7 @@ impl Printf for f64 {
                     number.push_str(&rev_tail_str.chars().rev().collect::<String>());
                     if strip_trailing_0s {
                         number = number.trim_end_matches('0').to_owned();
+                        number = number.trim_end_matches('.').to_owned();
                     }
                 } else {
                     number.push_str(&format!("{}", abs.round()));
