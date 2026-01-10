@@ -100,6 +100,15 @@ fn test_float() {
     check_fmt("%.1f", 2.599);
     check_fmt("%.1e", 2.599);
     check_fmt("%.1g", 2.599);
+    check_fmt("%04e", 0.0);
+    check_fmt("%04g", 0.0);
+    check_fmt("%04g", 1.0);
+    check_fmt("%e", 0.0);
+    check_fmt("%E", 0.0);
+    check_fmt("%e", -0.0);
+    check_fmt("%.2e", 0.0);
+    check_fmt("%g", -0.0);
+    check_fmt("%.2g", 1.0);
 
     // MacOS libc behaves differently from glibc for nan. glibc is the reference implementation.
     if cfg!(target_env = "gnu") {
