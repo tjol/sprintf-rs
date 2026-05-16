@@ -1,5 +1,6 @@
 //! Parse printf format strings
 
+use crate::compat::*;
 use crate::{PrintfError, Result};
 
 /// A part of a format string: either a string of characters to be included

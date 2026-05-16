@@ -1,6 +1,7 @@
-use std::convert::{TryFrom, TryInto};
-use std::ffi::{CStr, CString};
+use core::convert::{TryFrom, TryInto};
+use core::ffi::CStr;
 
+use crate::compat::*;
 use crate::{
     parser::{ConversionSpecifier, ConversionType, NumericParam},
     PrintfError, Result,

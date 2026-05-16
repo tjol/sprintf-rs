@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "no_std", no_std)]
+
 //! Libc s(n)printf clone written in Rust, so you can use printf-style
 //! formatting without a libc (e.g. in WebAssembly).
 //!
@@ -25,10 +27,33 @@ use thiserror::Error;
 mod format;
 pub mod parser;
 
+use compat::*;
 pub use format::Printf;
 use parser::{parse_format_string, FormatElement};
 #[doc(hidden)]
 pub use parser::{ConversionSpecifier, ConversionType, NumericParam};
+
+pub(crate) mod compat {
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std")] {
+            extern crate alloc;
+
+            pub use alloc::ffi::CString;
+            pub use alloc::format;
+            pub use alloc::string::String;
+            pub use alloc::borrow::ToOwned;
+            pub use alloc::vec::Vec;
+
+            pub use num_traits::Float;
+        } else {
+            pub use std::ffi::CString;
+            pub use std::format;
+            pub use std::string::String;
+            pub use std::borrow::ToOwned;
+            pub use std::vec::Vec;
+        }
+    }
+}
 
 /// Error type
 #[derive(Debug, Clone, Copy, Error, PartialEq, Eq)]
@@ -50,7 +75,7 @@ pub enum PrintfError {
     Unknown,
 }
 
-pub type Result<T> = std::result::Result<T, PrintfError>;
+pub type Result<T> = core::result::Result<T, PrintfError>;
 
 /// Format a string. (Roughly equivalent to `vsnprintf` or `vasprintf` in C)
 ///
