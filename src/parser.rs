@@ -99,28 +99,45 @@ pub enum ConversionType {
 ///             conversion_type: ConversionType::HexIntLower,
 ///         })
 ///     );
-///
 pub fn parse_format_string(fmt: &str) -> Result<Vec<FormatElement<'_>>> {
-    // find the first %
-    let mut res = Vec::new();
+    parse_format_string_iter(fmt).collect()
+}
 
-    let mut rem = fmt;
+pub fn parse_format_string_iter(fmt: &str) -> impl Iterator<Item = Result<FormatElement<'_>>> {
+    struct It<'a> {
+        rem: &'a str,
+    }
 
-    while !rem.is_empty() {
-        if let Some((verbatim_prefix, rest)) = rem.split_once('%') {
-            if !verbatim_prefix.is_empty() {
-                res.push(FormatElement::Verbatim(verbatim_prefix));
+    impl<'a> Iterator for It<'a> {
+        type Item = Result<FormatElement<'a>>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.rem.is_empty() {
+                return None;
             }
-            let (spec, rest) = take_conversion_specifier(rest)?;
-            res.push(FormatElement::Format(spec));
-            rem = rest;
-        } else {
-            res.push(FormatElement::Verbatim(rem));
-            break;
+
+            if let Some(rest) = self.rem.strip_prefix('%') {
+                let (spec, rest) = match take_conversion_specifier(rest) {
+                    Ok(t) => t,
+                    Err(e) => return Some(Err(e)),
+                };
+
+                self.rem = rest;
+                return Some(Ok(FormatElement::Format(spec)));
+            }
+
+            // theres nothing like split_once_inclusive so we have to do this
+            fn split_once_inclusive(input: &str) -> Option<(&str, &str)> {
+                let idx = input.find('%')?;
+                return Some(input.split_at(idx));
+            }
+            let (verbatim, rest) = split_once_inclusive(self.rem).unwrap_or((self.rem, ""));
+            self.rem = rest;
+            return Some(Ok(FormatElement::Verbatim(verbatim)));
         }
     }
 
-    Ok(res)
+    return It { rem: fmt };
 }
 
 fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
