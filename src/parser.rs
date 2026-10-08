@@ -95,7 +95,7 @@ pub enum ConversionType {
 ///             space_sign: false,
 ///             force_sign: false,
 ///             width: NumericParam::Literal(6),
-///             precision: NumericParam::Literal(6),
+///             precision: NumericParam::Literal(-1),
 ///             conversion_type: ConversionType::HexIntLower,
 ///         })
 ///     );
@@ -131,7 +131,7 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
         space_sign: false,
         force_sign: false,
         width: NumericParam::Literal(0),
-        precision: NumericParam::FromArgument, // Placeholder - must not be returned!
+        precision: NumericParam::Literal(-1),
         // ignore length modifier
         conversion_type: ConversionType::DecInt,
     };
@@ -166,11 +166,13 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
     let (w, mut s) = take_numeric_param(s);
     spec.width = w;
     // parse precision
+    let mut precision_specified = false;
     if matches!(s.chars().next(), Some('.')) {
         s = &s[1..];
         let (p, s2) = take_numeric_param(s);
         spec.precision = p;
         s = s2;
+        precision_specified = true;
     }
     // check length specifier
     for len_spec in ["hh", "h", "ll", "l", "q", "L", "j", "z", "Z", "t"] {
@@ -203,14 +205,17 @@ fn take_conversion_specifier(s: &str) -> Result<(ConversionSpecifier, &str)> {
         }
     };
 
-    if spec.precision == NumericParam::FromArgument {
+    if !precision_specified {
         // If precision is not specified, set to default value
-        let p = if spec.conversion_type == ConversionType::String {
-            // Default to max limit (aka no limit) for strings
-            i32::MAX
-        } else {
-            // Default to 6 for all other types
-            6
+        let p = match spec.conversion_type {
+            ConversionType::String => i32::MAX,
+            ConversionType::DecFloatLower
+            | ConversionType::DecFloatUpper
+            | ConversionType::SciFloatLower
+            | ConversionType::SciFloatUpper
+            | ConversionType::CompactFloatLower
+            | ConversionType::CompactFloatUpper => 6,
+            _ => -1,
         };
         spec.precision = NumericParam::Literal(p);
     }

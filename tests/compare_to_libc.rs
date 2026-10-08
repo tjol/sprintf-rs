@@ -68,6 +68,93 @@ fn test_int() {
     check_fmt("%ld", 48_i64);
     check_fmt("%-8hd", -12_i16);
     check_fmt("%llx", 0x0123456789abcdef_u64);
+
+    // Precision on integer conversions (issue #23)
+    check_fmt("%.3d", 5);
+    check_fmt("%.3d", -5);
+    check_fmt("%.5d", 123);
+    check_fmt("%.1d", 123);
+    check_fmt("%.0d", 0);
+    check_fmt("%.0d", 5);
+    check_fmt("%.d", 0);
+    check_fmt("%.d", 42);
+    check_fmt("%8.3d", 5);
+    check_fmt("%8.3d", -5);
+    check_fmt("%08.3d", 5); // 0 flag ignored when precision specified
+    check_fmt("%08.3d", -5);
+    check_fmt("%-8.3d", 5);
+    check_fmt("%-8.3d", -5);
+    check_fmt("%+8.3d", 5);
+    check_fmt("%+8.3d", -5);
+    check_fmt("% 8.3d", 5);
+    check_fmt("% 8.3d", -5);
+    check_fmt("%4.0d", 0);
+    check_fmt("%+4.0d", 0);
+    check_fmt("%-4.0d", 0);
+    check_fmt("%-+4.0d", 0);
+    check_fmt("%.0x", 0);
+    check_fmt("%.3x", 0x1f);
+    check_fmt("%.5X", 0xabc);
+    check_fmt("%8.4x", 0x12);
+    check_fmt("%08.4x", 0x12);
+    check_fmt("%.0o", 0);
+    check_fmt("%.4o", 12);
+    check_fmt("%8.4o", 12);
+}
+
+fn check_fmt_prec<T: Printf>(fmt: &str, prec: i32, arg: T) {
+    let our_result = sprintf!(fmt, prec, arg).unwrap();
+    let mut buf = vec![0_u8; our_result.len() + 1];
+    let cfmt = CString::new(fmt).unwrap();
+    let clen: usize = unsafe {
+        snprintf(
+            buf.as_mut_ptr() as *mut c_char,
+            buf.len(),
+            cfmt.as_ptr(),
+            prec,
+            arg,
+        )
+    }
+    .try_into()
+    .unwrap();
+    buf.truncate(clen);
+    let c_result = String::from_utf8(buf).unwrap();
+    assert_eq!(our_result, c_result);
+}
+
+fn check_fmt_prec_s(fmt: &str, prec: i32, arg: &str) {
+    let our_result = sprintf!(fmt, prec, arg).unwrap();
+    let mut buf = vec![0_u8; our_result.len() + 1];
+    let cfmt = CString::new(fmt).unwrap();
+    let carg = CString::new(arg).unwrap();
+    let clen: usize = unsafe {
+        snprintf(
+            buf.as_mut_ptr() as *mut c_char,
+            buf.len(),
+            cfmt.as_ptr(),
+            prec,
+            carg.as_ptr(),
+        )
+    }
+    .try_into()
+    .unwrap();
+    buf.truncate(clen);
+    let c_result = String::from_utf8(buf).unwrap();
+    assert_eq!(our_result, c_result);
+}
+
+#[test]
+fn test_arg_precision() {
+    check_fmt_prec("%.*d", 3, 5);
+    check_fmt_prec("%.*d", 3, -5);
+    check_fmt_prec("%.*d", 0, 0);
+    check_fmt_prec("%.*d", -1, 42);
+    check_fmt_prec("%08.*d", -1, 42); // negative precision treated as omitted, 0 flag active
+    check_fmt_prec("%08.*d", 3, 42);  // positive precision, 0 flag ignored
+    check_fmt_prec("%.*x", 4, 0x2a);
+    check_fmt_prec_s("%.*s", 3, "hello");
+    check_fmt_prec_s("%.*s", -1, "hello");
+    check_fmt_prec_s("%8.*s", 3, "hello");
 }
 
 #[test]

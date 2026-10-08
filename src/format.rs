@@ -49,6 +49,11 @@ impl Printf for u64 {
             String::new()
         };
 
+        let prec: Option<usize> = match spec.precision {
+            NumericParam::Literal(p) if p >= 0 => Some(p as usize),
+            _ => None,
+        };
+
         // Build the actual number (in reverse)
         let mut rev_num = String::new();
         let mut n = *self;
@@ -57,8 +62,14 @@ impl Printf for u64 {
             n /= base;
             rev_num.push(digits[digit as usize]);
         }
-        if rev_num.is_empty() {
+        if rev_num.is_empty() && prec != Some(0) {
             rev_num.push('0');
+        }
+
+        if let Some(p) = prec {
+            while rev_num.len() < p {
+                rev_num.push('0');
+            }
         }
 
         // Take care of padding
@@ -70,13 +81,14 @@ impl Printf for u64 {
         }
         .try_into()
         .unwrap_or_default();
+        let zero_pad = spec.zero_pad && prec.is_none();
         let formatted = if spec.left_adj {
             let mut num_str = prefix + &rev_num.chars().rev().collect::<String>();
             while num_str.len() < width {
                 num_str.push(' ');
             }
             num_str
-        } else if spec.zero_pad {
+        } else if zero_pad {
             while prefix.len() + rev_num.len() < width {
                 rev_num.push('0');
             }
@@ -103,7 +115,7 @@ impl Printf for i64 {
             ConversionType::DecInt => {
                 // do I need a sign prefix?
                 let negative = *self < 0;
-                let abs_val = self.abs();
+                let abs_val = self.unsigned_abs();
                 let sign_prefix = if negative {
                     "-"
                 } else if spec.force_sign {
@@ -122,15 +134,17 @@ impl Printf for i64 {
                     }
                 };
 
-                let formatted = (abs_val as u64).format(&mod_spec)?;
-                // put the sign a after any leading spaces
-                let mut actual_number = &formatted[0..];
-                let mut leading_spaces = &formatted[0..0];
-                if let Some(first_non_space) = formatted.find(|c| c != ' ') {
-                    actual_number = &formatted[first_non_space..];
-                    leading_spaces = &formatted[0..first_non_space];
+                let formatted = abs_val.format(&mod_spec)?;
+                // put the sign after any leading spaces
+                if spec.left_adj {
+                    Ok(sign_prefix + &formatted)
+                } else if let Some(first_non_space) = formatted.find(|c| c != ' ') {
+                    let actual_number = &formatted[first_non_space..];
+                    let leading_spaces = &formatted[0..first_non_space];
+                    Ok(leading_spaces.to_owned() + &sign_prefix + actual_number)
+                } else {
+                    Ok(formatted + &sign_prefix)
                 }
-                Ok(leading_spaces.to_owned() + &sign_prefix + actual_number)
             }
             // unsigned-only formats
             ConversionType::HexIntLower | ConversionType::HexIntUpper | ConversionType::OctInt => {
@@ -295,8 +309,8 @@ impl Printf for f64 {
                     return Err(PrintfError::Unknown);
                 }
             };
-            if precision <= 0 {
-                precision = 0;
+            if precision < 0 {
+                precision = 6;
             }
             match spec.conversion_type {
                 ConversionType::DecFloatLower | ConversionType::DecFloatUpper => {
@@ -476,13 +490,12 @@ impl Printf for &str {
 
             // Take care of precision, putting the truncated string in `content`
             let precision: usize = match spec.precision {
-                NumericParam::Literal(p) => p,
+                NumericParam::Literal(p) if p >= 0 => p as usize,
+                NumericParam::Literal(_) => usize::MAX,
                 _ => {
                     return Err(PrintfError::Unknown); // should not happen at this point!!
                 }
-            }
-            .try_into()
-            .unwrap_or_default();
+            };
             let content_len = {
                 let mut content_len = precision.min(self.len());
                 while !self.is_char_boundary(content_len) {
